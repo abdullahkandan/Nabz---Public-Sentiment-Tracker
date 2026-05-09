@@ -5,6 +5,8 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from collections import Counter
+import re
 
 st.set_page_config(
     page_title="Nabz",
@@ -18,6 +20,15 @@ SOURCES = [
     {"name": "ARY News", "url": "https://arynews.tv/feed"},
     {"name": "BOL News", "url": "https://www.bolnews.com/feed"},
 ]
+
+STOPWORDS = set([
+    "the","a","an","and","or","but","in","on","at","to","for","of","with",
+    "is","are","was","were","be","been","has","have","had","will","would",
+    "he","she","it","they","we","you","i","his","her","its","their","our",
+    "this","that","these","those","as","by","from","up","about","into",
+    "after","says","say","said","over","new","two","one","also","amid",
+    "after","before","during","against","between","pakistan","pakistani"
+])
 
 @st.cache_resource
 def load_analyzer():
@@ -59,18 +70,45 @@ def fetch_and_analyze():
 
     df = pd.DataFrame(articles)
     df["date"] = pd.to_datetime(df["date"], utc=True, errors="coerce")
-    return df
+
+    all_words = []
+    for headline in df["headline"]:
+        words = re.findall(r'\b[a-zA-Z]{4,}\b', headline.lower())
+        all_words.extend([w for w in words if w not in STOPWORDS])
+
+    top_keywords = Counter(all_words).most_common(15)
+    kw_df = pd.DataFrame(top_keywords, columns=["topic", "count"])
+
+    return df, kw_df
 
 st.title("Nabz")
 st.caption("Pakistan's Public Intelligence Tracker")
 
 with st.spinner("Fetching latest headlines..."):
-    df = fetch_and_analyze()
+    df, kw_df = fetch_and_analyze()
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Headlines", len(df))
 col2.metric("Sources", df["source"].nunique())
 col3.metric("Last Updated", datetime.now().strftime("%d %b %Y, %H:%M"))
+
+st.divider()
+
+st.subheader("Trending Topics")
+fig3 = px.bar(kw_df.sort_values("count"), x="count", y="topic",
+              orientation="h",
+              color="count",
+              color_continuous_scale=["#A0A0A0", "#00D9A3"])
+fig3.update_layout(
+    showlegend=False,
+    plot_bgcolor="#1A1A2E",
+    paper_bgcolor="#1A1A2E",
+    font_color="white",
+    coloraxis_showscale=False,
+    yaxis_title=None,
+    xaxis_title="Mentions"
+)
+st.plotly_chart(fig3, use_container_width=True)
 
 st.divider()
 
