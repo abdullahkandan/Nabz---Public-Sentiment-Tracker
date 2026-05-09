@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import requests
+from bs4 import BeautifulSoup
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 st.set_page_config(
     page_title="Nabz",
@@ -9,21 +12,65 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Nabz")
-st.caption("Pakistan's Public Intelligence Tracker")
+SOURCES = [
+    {"name": "Dawn", "url": "https://www.dawn.com/feeds/home"},
+    {"name": "The News", "url": "https://www.thenews.com.pk/rss/1/1"},
+    {"name": "ARY News", "url": "https://arynews.tv/feed"},
+    {"name": "BOL News", "url": "https://www.bolnews.com/feed"},
+]
 
-@st.cache_data
-def load_data():
-    df = pd.read_csv("nabz_headlines.csv")
+@st.cache_resource
+def load_analyzer():
+    return SentimentIntensityAnalyzer()
+
+@st.cache_data(ttl=1800)
+def fetch_and_analyze():
+    analyzer = load_analyzer()
+    headers = {"User-Agent": "Mozilla/5.0"}
+    articles = []
+
+    for source in SOURCES:
+        try:
+            response = requests.get(source["url"], headers=headers, timeout=10)
+            soup = BeautifulSoup(response.text, "xml")
+            items = soup.find_all("item")
+            for item in items:
+                headline = item.title.text.strip() if item.title else None
+                if not headline:
+                    continue
+                score = analyzer.polarity_scores(headline)
+                compound = score["compound"]
+                if compound >= 0.05:
+                    sentiment = "positive"
+                elif compound <= -0.05:
+                    sentiment = "negative"
+                else:
+                    sentiment = "neutral"
+                articles.append({
+                    "headline": headline,
+                    "source": source["name"],
+                    "date": item.pubDate.text.strip() if item.pubDate else None,
+                    "url": item.link.text.strip() if item.link else None,
+                    "sentiment": sentiment,
+                    "sentiment_score": round(abs(compound), 3)
+                })
+        except Exception as e:
+            st.warning(f"{source['name']} failed: {e}")
+
+    df = pd.DataFrame(articles)
     df["date"] = pd.to_datetime(df["date"], utc=True, errors="coerce")
     return df
 
-df = load_data()
+st.title("Nabz")
+st.caption("Pakistan's Public Intelligence Tracker")
+
+with st.spinner("Fetching latest headlines..."):
+    df = fetch_and_analyze()
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Headlines", len(df))
 col2.metric("Sources", df["source"].nunique())
-col3.metric("Last Updated", datetime.now().strftime("%d %b %Y"))
+col3.metric("Last Updated", datetime.now().strftime("%d %b %Y, %H:%M"))
 
 st.divider()
 
