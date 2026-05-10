@@ -167,10 +167,319 @@ def get_bias_data(keyword, df):
     bias = bias[bias["total"] > 0]
     return bias, filtered
 
+# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Nabz", page_icon="📰", layout="wide")
 
-st.title("Nabz")
-st.caption("Pakistan's Public Intelligence Tracker")
+# ── Global CSS ────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+    --bg-base:        #08090D;
+    --bg-surface:     #0C0F18;
+    --bg-card:        #101420;
+    --bg-card-hover:  #141926;
+    --border:         #1C2235;
+    --border-subtle:  #12151F;
+    --accent:         #00C9A7;
+    --accent-dim:     rgba(0, 201, 167, 0.08);
+    --accent-glow:    rgba(0, 201, 167, 0.18);
+    --text-primary:   #E2E8F2;
+    --text-secondary: #8895A8;
+    --text-muted:     #3E4858;
+    --positive:       #00C87A;
+    --positive-bg:    rgba(0, 200, 122, 0.08);
+    --positive-bd:    rgba(0, 200, 122, 0.24);
+    --negative:       #E8412A;
+    --negative-bg:    rgba(232, 65, 42, 0.08);
+    --negative-bd:    rgba(232, 65, 42, 0.24);
+    --neutral-col:    #6B7688;
+    --neutral-bg:     rgba(107, 118, 136, 0.10);
+    --neutral-bd:     rgba(107, 118, 136, 0.22);
+    --live:           #FF3B3B;
+    --r:              5px;
+    --r-sm:           3px;
+}
+
+/* ── Base ── */
+html, body, [class*="css"], .stApp {
+    font-family: 'DM Sans', sans-serif !important;
+    background-color: var(--bg-base) !important;
+    color: var(--text-primary) !important;
+}
+#MainMenu, footer { visibility: hidden !important; }
+.stDeployButton { display: none !important; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #2A3045; }
+
+.main .block-container {
+    padding: 1rem 2.5rem 3rem 2.5rem !important;
+    max-width: 1400px !important;
+}
+
+/* ── Metric cards ── */
+[data-testid="metric-container"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    padding: 1.4rem 1.6rem !important;
+    transition: border-color 0.22s ease, background 0.22s ease;
+}
+[data-testid="metric-container"]:hover {
+    border-color: var(--accent) !important;
+    background: var(--bg-card-hover) !important;
+}
+[data-testid="stMetricLabel"] p,
+[data-testid="stMetricLabel"] {
+    font-size: 0.62rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.13em !important;
+    text-transform: uppercase !important;
+    color: var(--text-secondary) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    margin: 0 !important;
+}
+[data-testid="stMetricValue"] > div,
+[data-testid="stMetricValue"] {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 2rem !important;
+    font-weight: 400 !important;
+    color: var(--text-primary) !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.15 !important;
+}
+
+/* ── Dividers ── */
+hr {
+    border: none !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    margin: 1.75rem 0 !important;
+}
+
+/* ── Expanders ── */
+[data-testid="stExpander"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    margin-bottom: 0.45rem !important;
+    overflow: hidden !important;
+}
+[data-testid="stExpander"] summary {
+    color: var(--text-primary) !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    padding: 0.8rem 1rem !important;
+    background: var(--bg-card) !important;
+    border-radius: var(--r) var(--r) 0 0 !important;
+    transition: background 0.18s ease;
+    list-style: none !important;
+}
+[data-testid="stExpander"] summary:hover {
+    background: var(--bg-card-hover) !important;
+}
+[data-testid="stExpander"] summary svg {
+    fill: var(--text-muted) !important;
+    flex-shrink: 0 !important;
+}
+[data-testid="stExpander"] details[open] summary {
+    border-bottom: 1px solid var(--border-subtle) !important;
+    border-radius: var(--r) var(--r) 0 0 !important;
+}
+[data-testid="stExpander"] > div > div:last-child,
+[data-testid="stExpander"] details > div {
+    background: var(--bg-surface) !important;
+    padding: 1rem 1.1rem !important;
+}
+
+/* ── Info / Alert boxes ── */
+[data-testid="stAlert"] {
+    background: var(--bg-card) !important;
+    border-radius: var(--r) !important;
+    border: 1px solid var(--border) !important;
+    border-left: 3px solid var(--accent) !important;
+    padding: 1rem 1.25rem !important;
+}
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] .stMarkdown p {
+    color: var(--text-primary) !important;
+    font-size: 0.875rem !important;
+    line-height: 1.65 !important;
+    margin: 0 !important;
+}
+[data-testid="stAlert"] > div > div:first-child svg { display: none !important; }
+
+/* ── Warning boxes ── */
+[data-testid="stNotification"],
+div[data-baseweb="notification"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-left: 3px solid #C8850A !important;
+}
+
+/* ── Text inputs ── */
+[data-testid="stTextInput"] input {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    color: var(--text-primary) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.875rem !important;
+    padding: 0.6rem 0.9rem !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+[data-testid="stTextInput"] input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim) !important;
+    outline: none !important;
+}
+[data-testid="stTextInput"] input::placeholder { color: var(--text-muted) !important; }
+[data-testid="stTextInput"] label {
+    color: var(--text-secondary) !important;
+    font-size: 0.72rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.04em !important;
+}
+
+/* ── Multiselect ── */
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    transition: border-color 0.2s ease;
+}
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:first-child:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim) !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+    background: var(--accent-dim) !important;
+    border: 1px solid rgba(0, 201, 167, 0.28) !important;
+    border-radius: var(--r-sm) !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span {
+    color: var(--accent) !important;
+    font-size: 0.75rem !important;
+    font-family: 'DM Mono', monospace !important;
+}
+[data-testid="stMultiSelect"] label {
+    color: var(--text-secondary) !important;
+    font-size: 0.72rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.04em !important;
+}
+[data-testid="stMultiSelect"] input { color: var(--text-primary) !important; }
+
+/* ── Dataframe ── */
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    overflow: hidden !important;
+}
+
+/* ── Plotly chart wrapper ── */
+[data-testid="stPlotlyChart"] {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+    overflow: hidden !important;
+}
+
+/* ── Column gap ── */
+[data-testid="stHorizontalBlock"] { gap: 1rem !important; }
+
+/* ── Markdown text ── */
+.stMarkdown p {
+    color: var(--text-primary) !important;
+    line-height: 1.65 !important;
+}
+.stMarkdown strong { color: var(--text-primary) !important; font-weight: 600 !important; }
+.stMarkdown li {
+    color: var(--text-secondary) !important;
+    font-size: 0.855rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+/* ── Spinner ── */
+[data-testid="stSpinner"] > div {
+    border-top-color: var(--accent) !important;
+}
+
+/* ── Dropdown menu ── */
+[data-baseweb="popover"] ul,
+[data-baseweb="menu"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r) !important;
+}
+[data-baseweb="menu"] li { color: var(--text-primary) !important; }
+[data-baseweb="menu"] li:hover { background: var(--bg-card-hover) !important; }
+
+/* ── Animations ── */
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.45); }
+    60%       { opacity: 0.75; box-shadow: 0 0 0 5px rgba(255, 59, 59, 0); }
+}
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ── Hero Header ───────────────────────────────────────────────────────────────
+st.markdown("""
+<div style="padding: 2rem 0 1.5rem; animation: fade-up 0.45s ease forwards;">
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.55rem;">
+        <h1 style="
+            font-family:'DM Sans',sans-serif;
+            font-size:2.8rem;
+            font-weight:700;
+            letter-spacing:-0.055em;
+            color:#00C9A7;
+            margin:0;
+            line-height:1;
+        ">NABZ</h1>
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:0.4rem;
+            background:rgba(255,59,59,0.07);
+            border:1px solid rgba(255,59,59,0.2);
+            border-radius:3px;
+            padding:0.2rem 0.55rem;
+            margin-top:0.15rem;
+        ">
+            <span style="
+                display:inline-block;
+                width:6px; height:6px;
+                background:#FF3B3B;
+                border-radius:50%;
+                animation:pulse-live 1.9s ease-in-out infinite;
+            "></span>
+            <span style="
+                font-family:'DM Mono',monospace;
+                font-size:0.58rem;
+                font-weight:500;
+                letter-spacing:0.13em;
+                color:#FF3B3B;
+            ">LIVE</span>
+        </div>
+    </div>
+    <p style="
+        font-family:'DM Sans',sans-serif;
+        font-size:0.82rem;
+        color:#8895A8;
+        letter-spacing:0.04em;
+        margin:0 0 1.4rem;
+        font-weight:400;
+    ">Pakistan's Public Intelligence Tracker</p>
+    <div style="height:1px; background:linear-gradient(to right, #00C9A7 0%, #1C2235 55%, transparent 100%);"></div>
+</div>
+""", unsafe_allow_html=True)
 
 with st.spinner("Fetching latest headlines..."):
     df, kw_df, stories = fetch_and_analyze()
@@ -182,7 +491,20 @@ col3.metric("Last Updated", datetime.now().strftime("%d %b %Y, %H:%M"))
 
 st.divider()
 
-st.subheader("Ask Nabz")
+# ── Section: Ask Nabz ─────────────────────────────────────────────────────────
+st.markdown("""
+<div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.7rem;">
+    <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+    <span style="
+        font-family:'DM Sans',sans-serif;
+        font-size:0.62rem;
+        font-weight:600;
+        letter-spacing:0.15em;
+        text-transform:uppercase;
+        color:#8895A8;
+    ">Ask Nabz</span>
+</div>
+""", unsafe_allow_html=True)
 question = st.text_input("Ask anything about today's news in Pakistan",
                           placeholder="e.g. What's the mood around petrol prices?")
 if question and not df.empty:
@@ -192,16 +514,73 @@ if question and not df.empty:
 
 st.divider()
 
-st.subheader("Breaking Stories")
-st.caption("Topics being covered simultaneously across multiple outlets")
+# ── Section: Breaking Stories ─────────────────────────────────────────────────
+st.markdown("""
+<div style="margin-bottom:0.6rem;">
+    <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.3rem;">
+        <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+        <span style="
+            font-family:'DM Sans',sans-serif;
+            font-size:0.62rem;
+            font-weight:600;
+            letter-spacing:0.15em;
+            text-transform:uppercase;
+            color:#8895A8;
+        ">Breaking Stories</span>
+    </div>
+    <p style="
+        font-family:'DM Sans',sans-serif;
+        font-size:0.775rem;
+        color:#3E4858;
+        margin:0 0 0.5rem 1.7rem;
+        line-height:1.5;
+    ">Topics covered simultaneously across multiple outlets</p>
+</div>
+""", unsafe_allow_html=True)
+
+_PILL = {
+    "positive": ("#00C87A", "rgba(0,200,122,0.08)",  "rgba(0,200,122,0.24)"),
+    "negative": ("#E8412A", "rgba(232,65,42,0.08)",  "rgba(232,65,42,0.24)"),
+    "neutral":  ("#6B7688", "rgba(107,118,136,0.10)","rgba(107,118,136,0.22)"),
+}
 
 if stories:
     for story in stories:
-        sentiment_color = {"positive": "#00D9A3", "negative": "#FF6B4A", "neutral": "#A0A0A0"}
-        color = sentiment_color.get(story["dominant_sentiment"], "#A0A0A0")
-        with st.expander(f"📰 {story['label']}... — {story['outlet_count']} outlets"):
-            st.markdown(f"**Outlets:** {', '.join(story['outlets'])}")
-            st.markdown(f"**Dominant sentiment:** :{story['dominant_sentiment']}")
+        sent = story["dominant_sentiment"]
+        pill_color, pill_bg, pill_bd = _PILL.get(sent, _PILL["neutral"])
+        with st.expander(f"{story['label']}  ·  {story['outlet_count']} outlets"):
+            st.markdown(
+                f"""<div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.9rem;">
+                    <span style="
+                        font-family:'DM Mono',monospace;
+                        font-size:0.6rem;
+                        font-weight:500;
+                        letter-spacing:0.1em;
+                        background:rgba(0,201,167,0.07);
+                        border:1px solid rgba(0,201,167,0.2);
+                        color:#00C9A7;
+                        border-radius:3px;
+                        padding:0.15rem 0.5rem;
+                        text-transform:uppercase;
+                    ">{story['outlet_count']} outlets</span>
+                    <span style="
+                        font-family:'DM Mono',monospace;
+                        font-size:0.6rem;
+                        font-weight:500;
+                        letter-spacing:0.1em;
+                        background:{pill_bg};
+                        border:1px solid {pill_bd};
+                        color:{pill_color};
+                        border-radius:3px;
+                        padding:0.15rem 0.5rem;
+                        text-transform:uppercase;
+                    ">{sent}</span>
+                    <span style="font-family:'DM Sans',sans-serif; font-size:0.8rem; color:#8895A8;">
+                        {', '.join(story['outlets'])}
+                    </span>
+                </div>""",
+                unsafe_allow_html=True,
+            )
             st.markdown("**Related headlines:**")
             for h in story["headlines"]:
                 st.markdown(f"- {h}")
@@ -210,8 +589,29 @@ else:
 
 st.divider()
 
-st.subheader("Outlet Bias Tracker")
-st.caption("Search a topic to see how each outlet covers it")
+# ── Section: Outlet Bias Tracker ──────────────────────────────────────────────
+st.markdown("""
+<div style="margin-bottom:0.6rem;">
+    <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.3rem;">
+        <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+        <span style="
+            font-family:'DM Sans',sans-serif;
+            font-size:0.62rem;
+            font-weight:600;
+            letter-spacing:0.15em;
+            text-transform:uppercase;
+            color:#8895A8;
+        ">Outlet Bias Tracker</span>
+    </div>
+    <p style="
+        font-family:'DM Sans',sans-serif;
+        font-size:0.775rem;
+        color:#3E4858;
+        margin:0 0 0.5rem 1.7rem;
+        line-height:1.5;
+    ">Search a topic to see how each outlet covers it</p>
+</div>
+""", unsafe_allow_html=True)
 
 keyword = st.text_input("Enter a keyword", placeholder="e.g. army, PTI, economy, India")
 if keyword and not df.empty:
@@ -228,7 +628,7 @@ if keyword and not df.empty:
         colors = {"positive": "#00D9A3", "neutral": "#A0A0A0", "negative": "#FF6B4A"}
         fig = px.bar(bias_melted, x="source", y="count", color="sentiment",
                      color_discrete_map=colors, barmode="group")
-        fig.update_layout(plot_bgcolor="#1A1A2E", paper_bgcolor="#1A1A2E",
+        fig.update_layout(plot_bgcolor="#101420", paper_bgcolor="#08090D",
                           font_color="white", legend_title="Sentiment",
                           xaxis_title="Outlet", yaxis_title="Headlines")
         st.plotly_chart(fig, use_container_width=True)
@@ -261,13 +661,26 @@ In 4-6 sentences, analyze how different outlets are covering this topic. Are any
 
 st.divider()
 
+# ── Section: Trending Topics ──────────────────────────────────────────────────
 if not kw_df.empty:
-    st.subheader("Trending Topics")
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.75rem;">
+        <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+        <span style="
+            font-family:'DM Sans',sans-serif;
+            font-size:0.62rem;
+            font-weight:600;
+            letter-spacing:0.15em;
+            text-transform:uppercase;
+            color:#8895A8;
+        ">Trending Topics</span>
+    </div>
+    """, unsafe_allow_html=True)
     fig3 = px.bar(kw_df.sort_values("count"), x="count", y="topic",
                   orientation="h", color="count",
                   color_continuous_scale=["#A0A0A0", "#00D9A3"])
-    fig3.update_layout(showlegend=False, plot_bgcolor="#1A1A2E",
-                       paper_bgcolor="#1A1A2E", font_color="white",
+    fig3.update_layout(showlegend=False, plot_bgcolor="#101420",
+                       paper_bgcolor="#08090D", font_color="white",
                        coloraxis_showscale=False, yaxis_title=None,
                        xaxis_title="Mentions")
     st.plotly_chart(fig3, use_container_width=True)
@@ -276,31 +689,70 @@ st.divider()
 
 col_left, col_right = st.columns(2)
 
+# ── Section: Sentiment Distribution ──────────────────────────────────────────
 with col_left:
-    st.subheader("Sentiment Distribution")
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.75rem;">
+        <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+        <span style="
+            font-family:'DM Sans',sans-serif;
+            font-size:0.62rem;
+            font-weight:600;
+            letter-spacing:0.15em;
+            text-transform:uppercase;
+            color:#8895A8;
+        ">Sentiment Distribution</span>
+    </div>
+    """, unsafe_allow_html=True)
     if not df.empty:
         sentiment_counts = df["sentiment"].value_counts().reset_index()
         sentiment_counts.columns = ["sentiment", "count"]
         colors = {"positive": "#00D9A3", "neutral": "#A0A0A0", "negative": "#FF6B4A"}
         fig1 = px.bar(sentiment_counts, x="sentiment", y="count",
                       color="sentiment", color_discrete_map=colors)
-        fig1.update_layout(showlegend=False, plot_bgcolor="#1A1A2E",
-                           paper_bgcolor="#1A1A2E", font_color="white")
+        fig1.update_layout(showlegend=False, plot_bgcolor="#101420",
+                           paper_bgcolor="#08090D", font_color="white")
         st.plotly_chart(fig1, use_container_width=True)
 
+# ── Section: Headlines by Source ─────────────────────────────────────────────
 with col_right:
-    st.subheader("Headlines by Source")
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.75rem;">
+        <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+        <span style="
+            font-family:'DM Sans',sans-serif;
+            font-size:0.62rem;
+            font-weight:600;
+            letter-spacing:0.15em;
+            text-transform:uppercase;
+            color:#8895A8;
+        ">Headlines by Source</span>
+    </div>
+    """, unsafe_allow_html=True)
     if not df.empty:
         source_counts = df["source"].value_counts().reset_index()
         source_counts.columns = ["source", "count"]
         fig2 = px.pie(source_counts, values="count", names="source",
                       color_discrete_sequence=["#00D9A3", "#FF6B4A", "#4A90D9", "#F5A623"])
-        fig2.update_layout(plot_bgcolor="#1A1A2E", paper_bgcolor="#1A1A2E", font_color="white")
+        fig2.update_layout(plot_bgcolor="#101420", paper_bgcolor="#08090D", font_color="white")
         st.plotly_chart(fig2, use_container_width=True)
 
 st.divider()
 
-st.subheader("Latest Headlines")
+# ── Section: Latest Headlines ─────────────────────────────────────────────────
+st.markdown("""
+<div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.75rem;">
+    <div style="width:2px; height:1rem; background:#00C9A7; border-radius:1px; flex-shrink:0;"></div>
+    <span style="
+        font-family:'DM Sans',sans-serif;
+        font-size:0.62rem;
+        font-weight:600;
+        letter-spacing:0.15em;
+        text-transform:uppercase;
+        color:#8895A8;
+    ">Latest Headlines</span>
+</div>
+""", unsafe_allow_html=True)
 if not df.empty:
     source_filter = st.multiselect("Filter by source", options=df["source"].unique(),
                                     default=df["source"].unique())
@@ -308,5 +760,13 @@ if not df.empty:
                                        options=["positive", "neutral", "negative"],
                                        default=["positive", "neutral", "negative"])
     filtered = df[df["source"].isin(source_filter) & df["sentiment"].isin(sentiment_filter)]
-    filtered_display = filtered[["headline", "source", "sentiment", "sentiment_score", "date"]].sort_values("date", ascending=False)
-    st.dataframe(filtered_display, use_container_width=True, hide_index=True)
+    filtered_display = filtered[["headline", "source", "sentiment", "sentiment_score", "date", "url"]].sort_values("date", ascending=False)
+    filtered_display["headline"] = filtered_display.apply(
+        lambda row: f'<a href="{row["url"]}" target="_blank" style="color:#00C9A7; text-decoration:none;">{row["headline"]}</a>' 
+        if pd.notna(row["url"]) else row["headline"], axis=1
+    )
+    st.write(
+        filtered_display[["headline", "source", "sentiment", "sentiment_score", "date"]]
+        .to_html(escape=False, index=False),
+        unsafe_allow_html=True
+    )
